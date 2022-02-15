@@ -1,0 +1,24 @@
+{
+  "name": "app-bridge-mock-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "dev": "tsc --watch",
+    "start": "node ./dist/Server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.17.2"
+  },
+  "devDependencies": {
+    "@types/socket.io-client": "^1.4.33",
+    "@types/express": "^4.17.2",
+    "@types/node": "^14.0.27",
+    "@types/jest": "^26.0.7",
+    "jest": "^26.1.0"
+  }
+}
