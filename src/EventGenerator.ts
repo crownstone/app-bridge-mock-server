@@ -13,12 +13,39 @@ export const EventGenerator = {
   },
 
   getErrorEvent(code : number, subType: SystemSubType, message: string) : string {
-    let startEvent: SystemEvent = {
+    let event: SystemEvent = {
       type:    "system",
       subType:  subType,
       code:     code,
       message:  message,
     };
-    return "data:" + JSON.stringify(startEvent) + '\n\n';
+    return "data:" + JSON.stringify(event) + '\n\n';
+  },
+
+  getNativeBusEvent(topic: string, data: any) {
+    let event = {
+      type:   "event",
+      topic:  topic,
+      data:   data,
+    };
+    return "data:" + JSON.stringify(event) + '\n\n';
+  },
+
+  getCallFailEvent(callId: string, error: any) {
+    let event = {
+      type:   "failCall",
+      callId: callId,
+      error:  error,
+    };
+    return "data:" + JSON.stringify(event) + '\n\n';
+  },
+
+  getCallSuccessEvent(callId: string, data: any) {
+    let event = {
+      type:  "succeedCall",
+      callId: callId,
+      data:   data,
+    };
+    return "data:" + JSON.stringify(event) + '\n\n';
   }
 }
