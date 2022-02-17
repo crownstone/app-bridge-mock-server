@@ -88,21 +88,24 @@ var BluenetCallListing = function (_React$Component) {
     key: 'drawLists',
     value: function drawLists(list) {
       var result = [];
+      var even = false;
       var _iteratorNormalCompletion = true;
       var _didIteratorError = false;
       var _iteratorError = undefined;
 
       try {
         for (var _iterator = list[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var _item = _step.value;
+          var item = _step.value;
 
           result.push(React.createElement(CallListing, {
-            key: '' + _item.function + _item.tStart,
-            'function': _item.function,
-            args: _item.args,
-            tStart: _item.tStart,
-            tEnd: _item.tEnd
+            key: '' + item.function + item.tStart,
+            'function': item.function,
+            args: item.args,
+            tStart: item.tStart,
+            tEnd: item.tEnd,
+            even: even
           }));
+          even = !even;
         }
       } catch (err) {
         _didIteratorError = true;
@@ -134,10 +137,12 @@ var BluenetCallListing = function (_React$Component) {
         ),
         React.createElement('br', null),
         React.createElement(CallListing, {
+          header: true,
+          backgroundColor: '#21a4a4',
           'function': 'function',
           args: ["handle", "arguments"],
-          tStart: item.tStart,
-          tEnd: item.tEnd
+          tStart: 'start',
+          tEnd: 'end'
         }),
         this.drawLists(this.pending),
         React.createElement('br', null),
@@ -161,33 +166,36 @@ var CallListing = function (_React$Component2) {
   _createClass(CallListing, [{
     key: 'render',
     value: function render() {
+      var textStyle = this.props.header ? { fontWeight: 'bold', color: '#fff' } : { color: "#000" };
+      var padding = 10;
+
       return React.createElement(
         'div',
-        { style: { display: 'flex', width: 1000, flexDirection: 'row' } },
+        { style: { display: 'flex', flexDirection: 'row', backgroundColor: this.props.backgroundColor || (this.props.even ? '#cbe5e5' : "#fff"), borderRadius: 10 } },
         React.createElement(
           'div',
-          { style: { display: 'flex', padding: 5 } },
+          { style: Object.assign({ display: 'flex', padding: padding, width: 200 }, textStyle) },
           this.props.function
         ),
         React.createElement(
           'div',
-          { style: { display: 'flex', padding: 5 } },
+          { style: Object.assign({ display: 'flex', padding: padding, width: 250 }, textStyle) },
           this.props.args[0] ? this.props.args[0] : ''
         ),
         React.createElement(
           'div',
-          { style: { display: 'flex', width: 500, padding: 5 } },
+          { style: Object.assign({ display: 'flex', width: 500, padding: padding }, textStyle) },
           JSON.stringify(this.props.args.slice(1))
         ),
         React.createElement(
           'div',
-          { style: { display: 'flex', padding: 5 } },
-          typeof this.props.tStart == 'number' ? new Date(this.props.tStart).toISOString() : this.props.tStart
+          { style: Object.assign({ display: 'flex', padding: padding, width: 200 }, textStyle) },
+          typeof this.props.tStart == 'string' ? this.props.tStart : new Date(this.props.tStart).toISOString()
         ),
         React.createElement(
           'div',
-          { style: { display: 'flex', padding: 5 } },
-          typeof this.props.tStart == 'start' ? this.props.tEnd : this.props.tEnd ? new Date(this.props.tEnd).toISOString() : "pending"
+          { style: Object.assign({ display: 'flex', padding: padding, width: 200 }, textStyle) },
+          typeof this.props.tStart == 'string' ? this.props.tEnd : this.props.tEnd ? new Date(this.props.tEnd).toISOString() : "pending"
         )
       );
     }
