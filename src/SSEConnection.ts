@@ -43,7 +43,6 @@ export class SSEConnection {
   destroy(message = "") {
     if (this._destroyed == false) {
       this._destroyed = true;
-      console.log(this.uuid, "Destroy message", message);
       this.connected = false;
       clearInterval(this.keepAliveTimer);
       this.request.removeAllListeners();

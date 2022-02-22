@@ -15,39 +15,76 @@ app.use(express.urlencoded({ extended: true })) // for parsing application/x-www
 let bridgeMock = new BridgeMock();
 
 app.post('/reset', (req: Request, res : Response) => {
-  let content = req.body;
   bridgeMock.reset();
+  console.log("Called /reset")
   res.end()
 })
 
-app.post('/call', (req: Request, res : Response) => {
+
+app.post('/callPromise', (req: Request, res : Response) => {
   let content = req.body;
+  console.log("Called /callPromise")
   bridgeMock.addCall(content);
   res.end()
 })
 
+
+app.post('/callBluenet', (req: Request, res : Response) => {
+  let content = req.body;
+  console.log("Called /callBluenet")
+  bridgeMock.addBluenetCall(content);
+  res.end()
+})
+
+
 app.post('/success', (req: Request, res : Response) => {
   let content = req.body;
+  console.log("Called /success")
   bridgeMock.succeedCall(content);
   res.end()
 })
 
+
+app.post('/successById', (req: Request, res : Response) => {
+  let content = req.body;
+  console.log("Called /successById")
+  bridgeMock.succeedById(content.id, content.result, false);
+  res.end()
+})
+
+
 app.post('/fail', (req: Request, res : Response) => {
   let content = req.body;
+  console.log("Called /fail")
   bridgeMock.failCall(content);
   res.end()
 })
 
+
 app.post('/event', (req: Request, res : Response) => {
   let content = req.body;
+  console.log("Called /event")
   EventDispatcher.dispatch(EventGenerator.getNativeBusEvent(content.topic, content.data));
   res.end()
 })
 
+
+app.get('/functionCalls', (req: Request, res : Response) => {
+  let content = req.query;
+  console.log("Called /functionCalls", content)
+  // @ts-ignore
+  let result = bridgeMock.getFunctionCalls(content.function)
+
+  res.end(JSON.stringify(result))
+})
+
+
 app.get('/calls', (req: Request, res : Response) => {
+  console.log("Called /calls")
   let result = {
-    pending: bridgeMock.pendingCalls,
+    pending:  bridgeMock.pendingCalls,
     finished: bridgeMock.finishedCalls,
+    bluenet:  bridgeMock.bluenetCalls,
   };
 
   res.end(JSON.stringify(result))
@@ -65,7 +102,6 @@ app.get('/sse', async function(req: Request, res : Response) {
   });
 
   res.write(EventGenerator.getStartEvent());
-
   EventDispatcher.addClient(req, res);
 })
 

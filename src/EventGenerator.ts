@@ -23,29 +23,26 @@ export const EventGenerator = {
   },
 
   getNativeBusEvent(topic: string, data: any) {
-    let event = {
+    return {
       type:   "event",
       topic:  topic,
       data:   data,
     };
-    return "data:" + JSON.stringify(event) + '\n\n';
   },
 
   getCallFailEvent(callId: string, error: any) {
-    let event = {
+    return {
       type:   "failCall",
       callId: callId,
       error:  error,
     };
-    return "data:" + JSON.stringify(event) + '\n\n';
   },
 
   getCallSuccessEvent(callId: string, data: any) {
-    let event = {
+    return {
       type:  "succeedCall",
       callId: callId,
       data:   data,
     };
-    return "data:" + JSON.stringify(event) + '\n\n';
   }
 }

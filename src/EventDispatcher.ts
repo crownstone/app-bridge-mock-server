@@ -35,9 +35,6 @@ export class EventDispatcherClass {
         delete this.clients[uuid];
       }
     );
-    if (!this.clients[uuid].connected) {
-      delete this.clients[uuid];
-    }
   }
 
   destroy() {
