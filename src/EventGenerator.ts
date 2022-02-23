@@ -38,6 +38,13 @@ export const EventGenerator = {
     };
   },
 
+  getCallGeneratedEvent(type: string) {
+    return {
+      type:    "callAdded",
+      subType: type
+    };
+  },
+
   getCallSuccessEvent(callId: string, data: any) {
     return {
       type:  "succeedCall",

@@ -33,7 +33,8 @@ export class BridgeMock {
   }
 
   addBluenetCall(data: {function: string, args: any[], tCalled: number}) {
-    this.bluenetCalls.push(data)
+    this.bluenetCalls.push(data);
+    EventDispatcher.dispatch(EventGenerator.getCallGeneratedEvent('bluenet'));
   }
 
   addCall(data: {id: string, function: string, args: any[]}) {
@@ -54,6 +55,8 @@ export class BridgeMock {
     if (this.autoResolveMethods[data.function] !== undefined) {
       this.succeedById(data.id, this.autoResolveMethods[data.function]);
     }
+
+    EventDispatcher.dispatch(EventGenerator.getCallGeneratedEvent('promise'));
   }
 
 

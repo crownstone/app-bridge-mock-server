@@ -31,7 +31,7 @@ app.post('/callPromise', (req: Request, res : Response) => {
 
 app.post('/callBluenet', (req: Request, res : Response) => {
   let content = req.body;
-  console.log("Called /callBluenet")
+  console.log("Called /callBluenet");
   bridgeMock.addBluenetCall(content);
   res.end()
 })

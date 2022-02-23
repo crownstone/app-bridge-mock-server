@@ -48,6 +48,8 @@ var BluenetCallListing = function (_React$Component) {
     _this.pending = [];
     _this.finished = [];
     _this.bluenet = [];
+    _this.updating = false;
+    _this.updatePending = false;
 
     _this.state = { loaded: false };
     // this.processData(testData)
@@ -55,18 +57,50 @@ var BluenetCallListing = function (_React$Component) {
   }
 
   _createClass(BluenetCallListing, [{
-    key: 'componentDidMount',
-    value: function componentDidMount() {
+    key: 'openEvenSource',
+    value: function openEvenSource() {
       var _this2 = this;
 
-      setInterval(function () {
+      this.eventSource = new EventSource("http://localhost:3100/sse");
+      this.eventSource.addEventListener('open', function (event) {
+        console.log("Opened SSE connection to bridge mock server.");
         _this2.update();
-      }, 1500);
+      });
+      this.eventSource.addEventListener('message', function (event) {
+        console.log("Incoming SSE:", event);
+        if (event && event.data) {
+          var message = JSON.parse(event.data);
+          if (message.type === "callAdded") {
+            _this2.update();
+          }
+        }
+      });
+      this.eventSource.addEventListener('error', function (error) {
+        console.log("Error with SSE connection", error);
+        _this2.eventSource.close();
+        setTimeout(function () {
+          console.log("Retrying SSE connection...");
+          _this2.openEvenSource();
+        }, 1000);
+      });
+    }
+  }, {
+    key: 'componentDidMount',
+    value: function componentDidMount() {
+      this.openEvenSource();
     }
   }, {
     key: 'update',
     value: function update() {
       var _this3 = this;
+
+      if (this.updating === true) {
+        this.updatePending = true;
+        return;
+      }
+
+      this.updatePending = false;
+      this.updating = true;
 
       window.fetch(pathPrefix + 'calls', { method: "GET", headers: defaultHeaders }).then(function (data) {
         return data.json();
@@ -78,6 +112,11 @@ var BluenetCallListing = function (_React$Component) {
         }
       }).catch(function (err) {
         console.log("Err", err);
+      }).then(function () {
+        _this3.updating = false;
+        if (_this3.updatePending) {
+          _this3.update();
+        }
       });
     }
   }, {
