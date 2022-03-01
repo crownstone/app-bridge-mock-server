@@ -51,5 +51,20 @@ export const EventGenerator = {
       callId: callId,
       data:   data,
     };
+  },
+
+  getNativeResolveEvent(callId: string) {
+    return {
+      type:  "nativeResolve",
+      callId: callId,
+    };
+  },
+
+  getBluenetCallEvent(functionName: string, args: any[]) {
+    return {
+      type:  "callBluenet",
+      functionName: functionName,
+      arguments: args
+    };
   }
 }
