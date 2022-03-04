@@ -79,6 +79,14 @@ app.get('/functionCalls', (req: Request, res : Response) => {
 })
 
 
+app.get('/notification', (req: Request, res : Response) => {
+  let content = req.query;
+  console.log("Called /functionCalls", content)
+  EventDispatcher.dispatch(EventGenerator.getNotificationEvent(content.data));
+  res.end();
+})
+
+
 app.get('/calls', (req: Request, res : Response) => {
   console.log("Called /calls")
   let result = {

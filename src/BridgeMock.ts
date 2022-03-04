@@ -5,7 +5,7 @@ export class BridgeMock {
 
   pendingCalls      : Record<string, {function: string, args: any[], tStart: number, tEnd: number | null}> = {};
   finishedCalls     : Record<string, {function: string, args: any[], tStart: number, tEnd: number | null, resolveType?: string}> = {};
-  bluenetCalls      : {function: string, args: any[], tCalled: number, performType?: string}[] = [];
+  bluenetCalls      : {function: string, args: any[], tStart: number, performType?: "native" | "auto" }[] = [];
 
   functionHandleMap : Record<string, Record<string, string>> = {};
   functionIdMap     : Record<string, string[]> = {};
@@ -42,7 +42,7 @@ export class BridgeMock {
   }
 
   addBluenetCall(data: {function: string, args: any[]}) {
-    this.bluenetCalls.push({...data, tCalled: Date.now()});
+    this.bluenetCalls.push({...data, tStart: Date.now()});
     EventDispatcher.dispatch(EventGenerator.getCallGeneratedEvent('bluenet'));
 
     if (this.bluenetCallMethods[data.function] !== undefined) {
@@ -156,7 +156,7 @@ export class BridgeMock {
     let bluenet = [];
     for (let call of this.bluenetCalls) {
       if (call.function === functionName) {
-        bluenet.push({t: call.tCalled, args: call.args})
+        bluenet.push({t: call.tStart, args: call.args})
       }
     }
     return {pending, finished, bluenet};
