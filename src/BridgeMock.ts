@@ -41,8 +41,8 @@ export class BridgeMock {
     this.bluenetCalls      = [];
   }
 
-  addBluenetCall(data: {function: string, args: any[], tCalled: number}) {
-    this.bluenetCalls.push(data);
+  addBluenetCall(data: {function: string, args: any[]}) {
+    this.bluenetCalls.push({...data, tCalled: Date.now()});
     EventDispatcher.dispatch(EventGenerator.getCallGeneratedEvent('bluenet'));
 
     if (this.bluenetCallMethods[data.function] !== undefined) {
