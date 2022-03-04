@@ -37,11 +37,11 @@ app.post('/callBluenet', (req: Request, res : Response) => {
 })
 
 
-app.post('/success', (req: Request, res : Response) => {
+app.post('/success', async (req: Request, res : Response) => {
   let content = req.body;
   console.log("Called /success")
-  bridgeMock.succeedCall(content);
-  res.end()
+  let performed = await bridgeMock.succeedCall(content);
+  res.end( performed ? 'SUCCESS' : 'CALL_DOES_NOT_EXIST')
 })
 
 
@@ -53,11 +53,11 @@ app.post('/successById', (req: Request, res : Response) => {
 })
 
 
-app.post('/fail', (req: Request, res : Response) => {
+app.post('/fail', async (req: Request, res : Response) => {
   let content = req.body;
   console.log("Called /fail")
-  bridgeMock.failCall(content);
-  res.end()
+  let performed = await bridgeMock.failCall(content);
+  res.end( performed ? 'SUCCESS' : 'CALL_DOES_NOT_EXIST')
 })
 
 

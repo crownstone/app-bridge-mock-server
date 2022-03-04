@@ -1,5 +1,6 @@
 import {EventDispatcher} from "./EventDispatcher";
 import {EventGenerator} from "./EventGenerator";
+import {Util} from "./util/util";
 
 export class BridgeMock {
 
@@ -9,6 +10,8 @@ export class BridgeMock {
 
   functionHandleMap : Record<string, Record<string, string>> = {};
   functionIdMap     : Record<string, string[]> = {};
+
+  pendingResolves : any = {};
 
 
   autoResolveMethods : Record<string,any> = {
@@ -78,44 +81,85 @@ export class BridgeMock {
     }
 
     EventDispatcher.dispatch(EventGenerator.getCallGeneratedEvent('promise'));
+
+    this.checkPendingCalls();
   }
 
 
-  failCall(data: {handle: string | null, function: string, error: string}) {
-    if (data.handle) {
-      let callId = this.functionHandleMap[data.function][data.handle];
-      EventDispatcher.dispatch(EventGenerator.getCallFailEvent(callId,data.error));
-      this.finishedCalls[callId] = this.pendingCalls[callId];
-      this.finishedCalls[callId].tEnd = Date.now();
-      this.finishedCalls[callId].resolveType = 'manual';
-
-      this._cleanup(data.function, callId);
-      return;
+  async failCall(data: {handle: string | null, function: string, error: string, timeout?: number}) : Promise<boolean> {
+    let eventSender = (callId:string) => {
+      EventDispatcher.dispatch(EventGenerator.getCallSuccessEvent(callId, data.error));
     }
 
-    for (let id of this.functionIdMap[data.function]) {
-      EventDispatcher.dispatch(EventGenerator.getCallFailEvent(id,data.error));
-    }
-    this.functionIdMap[data.function] = [];
+    return this.handleCall(data, eventSender);
   }
 
 
-  succeedCall(data: {handle: string | null, function: string, data: any}) {
-    if (data.handle) {
-      let callId = this.functionHandleMap[data.function][data.handle];
-      EventDispatcher.dispatch(EventGenerator.getCallSuccessEvent(callId,data.data));
-      this.finishedCalls[callId] = this.pendingCalls[callId];
-      this.finishedCalls[callId].tEnd = Date.now();
-      this.finishedCalls[callId].resolveType = 'manual';
-
-      this._cleanup(data.function, callId);
-      return;
+  async succeedCall(data: {handle: string | null, function: string, data: any, timeout?: number}) : Promise<boolean> {
+    let eventSender = (callId:string) => {
+      EventDispatcher.dispatch(EventGenerator.getCallSuccessEvent(callId, data.data));
     }
 
-    for (let id of this.functionIdMap[data.function]) {
-      EventDispatcher.dispatch(EventGenerator.getCallSuccessEvent(id,data.data));
+    return this.handleCall(data, eventSender);
+  }
+
+
+  async handleCall(data: {handle: string | null, function: string, data?: any, error?:any, timeout?: number}, eventSender: (callId: string) => void) : Promise<boolean> {
+    let handle = () => {
+      if (data.handle) {
+        let callId = this.functionHandleMap[data.function]?.[data.handle];
+
+        if (!callId) {
+          return false;
+        }
+
+        eventSender(callId)
+        this.finishedCalls[callId] = this.pendingCalls[callId];
+        this.finishedCalls[callId].tEnd = Date.now();
+        this.finishedCalls[callId].resolveType = 'manual';
+
+        this._cleanup(data.function, callId);
+        return true;
+      }
+
+
+      let performed = false;
+      for (let id of this.functionIdMap[data.function]) {
+        eventSender(id);
+        performed = true
+      }
+      this.functionIdMap[data.function] = [];
+      return performed;
     }
-    this.functionIdMap[data.function] = [];
+
+    return new Promise<boolean>((resolve, reject) => {
+      if (handle() === true) { return resolve(true); }
+
+      if (!data.timeout) { return resolve(false) };
+
+      let id = Util.getUUID();
+      let timeout = setTimeout(() => {
+        delete this.pendingResolves[id];
+        resolve(false);
+      }, data.timeout*1000);
+
+      this.pendingResolves[id] = {
+        handler: handle,
+        resolver: () => { resolve(true); },
+        timeout: timeout
+      };
+    })
+  }
+
+
+  async checkPendingCalls() {
+    for (let pendingId in this.pendingResolves) {
+      if (this.pendingResolves[pendingId].handler() === true) {
+        clearTimeout(this.pendingResolves[pendingId].timeout);
+        this.pendingResolves[pendingId].resolver();
+        delete this.pendingResolves[pendingId];
+      }
+    }
   }
 
   succeedById(callId: string, result: any, autoResolve = true) {
