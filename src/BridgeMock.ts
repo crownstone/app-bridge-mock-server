@@ -37,11 +37,17 @@ export class BridgeMock {
 
 
   reset() {
+    for (let pendingId in this.pendingResolves) {
+      clearTimeout(this.pendingResolves[pendingId].timeout);
+      this.pendingResolves[pendingId].resolver();
+      delete this.pendingResolves[pendingId];
+    }
     this.pendingCalls      = {};
-    this.functionHandleMap = {};
-    this.functionIdMap     = {};
     this.finishedCalls     = {};
     this.bluenetCalls      = [];
+    this.functionHandleMap = {};
+    this.functionIdMap     = {};
+    this.pendingResolves   = {};
   }
 
   addBluenetCall(data: {function: string, args: any[]}) {
