@@ -69,6 +69,14 @@ app.post('/event', (req: Request, res : Response) => {
 })
 
 
+app.post('/notification', (req: Request, res : Response) => {
+  let content = req.query;
+  console.log("Called /functionCalls", content)
+  EventDispatcher.dispatch(EventGenerator.getNotificationEvent(content.data));
+  res.end();
+})
+
+
 app.get('/functionCalls', (req: Request, res : Response) => {
   let content = req.query;
   console.log("Called /functionCalls", content)
@@ -76,14 +84,6 @@ app.get('/functionCalls', (req: Request, res : Response) => {
   let result = bridgeMock.getFunctionCalls(content.function)
 
   res.end(JSON.stringify(result))
-})
-
-
-app.get('/notification', (req: Request, res : Response) => {
-  let content = req.query;
-  console.log("Called /functionCalls", content)
-  EventDispatcher.dispatch(EventGenerator.getNotificationEvent(content.data));
-  res.end();
 })
 
 
