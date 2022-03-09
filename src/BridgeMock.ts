@@ -20,6 +20,7 @@ export class BridgeMock {
     'isReady': true,
     'isDevelopmentEnvironment': true,
     'isPeripheralReady': true,
+    'phoneDisconnect': true,
     'setKeySets': true,
     'clearTrackedBeacons': true,
     'clearFingerprintsPromise': true,
@@ -94,7 +95,7 @@ export class BridgeMock {
 
   async failCall(data: {handle: string | null, function: string, error: string, timeout?: number}) : Promise<boolean> {
     let eventSender = (callId:string) => {
-      EventDispatcher.dispatch(EventGenerator.getCallSuccessEvent(callId, data.error));
+      EventDispatcher.dispatch(EventGenerator.getCallFailEvent(callId, data.error));
     }
 
     return this.handleCall(data, eventSender);
@@ -133,6 +134,7 @@ export class BridgeMock {
       for (let id of this.functionIdMap[data.function]) {
         eventSender(id);
         performed = true
+        console.log("Successfully finalized", data.function, "for", data.handle);
       }
       this.functionIdMap[data.function] = [];
       return performed;
@@ -146,6 +148,7 @@ export class BridgeMock {
       let id = Util.getUUID();
       let timeout = setTimeout(() => {
         delete this.pendingResolves[id];
+        console.log("Failed to finalize", data.function, "for", data.handle);
         resolve(false);
       }, data.timeout*1000);
 

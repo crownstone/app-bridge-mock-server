@@ -23,7 +23,7 @@ app.post('/reset', (req: Request, res : Response) => {
 
 app.post('/callPromise', (req: Request, res : Response) => {
   let content = req.body;
-  console.log("Called /callPromise")
+  console.log("Called /callPromise", content.function)
   bridgeMock.addCall(content);
   res.end()
 })
@@ -31,7 +31,7 @@ app.post('/callPromise', (req: Request, res : Response) => {
 
 app.post('/callBluenet', (req: Request, res : Response) => {
   let content = req.body;
-  console.log("Called /callBluenet");
+  console.log("Called /callBluenet", content.function);
   bridgeMock.addBluenetCall(content);
   res.end()
 })
@@ -39,7 +39,7 @@ app.post('/callBluenet', (req: Request, res : Response) => {
 
 app.post('/success', async (req: Request, res : Response) => {
   let content = req.body;
-  console.log("Called /success")
+  console.log("Called /success", content)
   let performed = await bridgeMock.succeedCall(content);
   res.end( performed ? 'SUCCESS' : 'CALL_DOES_NOT_EXIST')
 })
@@ -88,7 +88,7 @@ app.get('/functionCalls', (req: Request, res : Response) => {
 
 
 app.get('/calls', (req: Request, res : Response) => {
-  console.log("Called /calls")
+  // console.log("Called /calls")
   let result = {
     pending:  bridgeMock.pendingCalls,
     finished: bridgeMock.finishedCalls,
