@@ -14,16 +14,19 @@ export class BridgeMock {
   pendingResolves : any = {};
 
 
+  // the value is the result of the function call.
   autoResolveMethods : Record<string,any> = {
-    'canUseDynamicBackgroundBroadcasts': false,
-    'requestLocation': {},
-    'isReady': true,
-    'isDevelopmentEnvironment': true,
-    'isPeripheralReady': true,
-    'phoneDisconnect': true,
-    'setKeySets': true,
-    'clearTrackedBeacons': true,
-    'clearFingerprintsPromise': true,
+    canUseDynamicBackgroundBroadcasts: false,
+    requestLocation:                   {},
+    isReady:                           true,
+    isDevelopmentEnvironment:          true,
+    isPeripheralReady:                 true,
+    phoneDisconnect:                   true,
+    setKeySets:                        true,
+    clearTrackedBeacons:               true,
+    clearFingerprintsPromise:          true,
+    broadcastUpdateTrackedDevice:      true,
+    setTimeViaBroadcast:               true,
   };
 
   nativeResolveMethods : Record<string,any> = {
