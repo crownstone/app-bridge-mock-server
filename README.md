@@ -3,3 +3,5 @@
 Server used for mocking the Crownstone app bridge when running UI tests.
 
 Used in cloud-test-container
+
+Implemented according to the [PROTOCOL.md](./PROTOCOL.md).

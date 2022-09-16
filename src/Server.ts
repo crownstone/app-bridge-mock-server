@@ -23,7 +23,7 @@ app.post('/reset', (req: Request, res : Response) => {
 
 app.post('/callPromise', (req: Request, res : Response) => {
   let content = req.body;
-  console.log("Called /callPromise")
+  console.log("Called /callPromise", content.function)
   bridgeMock.addCall(content);
   res.end()
 })
@@ -31,17 +31,17 @@ app.post('/callPromise', (req: Request, res : Response) => {
 
 app.post('/callBluenet', (req: Request, res : Response) => {
   let content = req.body;
-  console.log("Called /callBluenet");
+  console.log("Called /callBluenet", content.function);
   bridgeMock.addBluenetCall(content);
   res.end()
 })
 
 
-app.post('/success', (req: Request, res : Response) => {
+app.post('/success', async (req: Request, res : Response) => {
   let content = req.body;
-  console.log("Called /success")
-  bridgeMock.succeedCall(content);
-  res.end()
+  console.log("Called /success", content)
+  let performed = await bridgeMock.succeedCall(content);
+  res.end( performed ? 'SUCCESS' : 'CALL_DOES_NOT_EXIST')
 })
 
 
@@ -53,11 +53,11 @@ app.post('/successById', (req: Request, res : Response) => {
 })
 
 
-app.post('/fail', (req: Request, res : Response) => {
+app.post('/fail', async (req: Request, res : Response) => {
   let content = req.body;
   console.log("Called /fail")
-  bridgeMock.failCall(content);
-  res.end()
+  let performed = await bridgeMock.failCall(content);
+  res.end( performed ? 'SUCCESS' : 'CALL_DOES_NOT_EXIST')
 })
 
 
@@ -66,6 +66,14 @@ app.post('/event', (req: Request, res : Response) => {
   console.log("Called /event")
   EventDispatcher.dispatch(EventGenerator.getNativeBusEvent(content.topic, content.data));
   res.end()
+})
+
+
+app.post('/notification', (req: Request, res : Response) => {
+  let content = req.query;
+  console.log("Called /functionCalls", content)
+  EventDispatcher.dispatch(EventGenerator.getNotificationEvent(content.data));
+  res.end();
 })
 
 
@@ -80,7 +88,7 @@ app.get('/functionCalls', (req: Request, res : Response) => {
 
 
 app.get('/calls', (req: Request, res : Response) => {
-  console.log("Called /calls")
+  // console.log("Called /calls")
   let result = {
     pending:  bridgeMock.pendingCalls,
     finished: bridgeMock.finishedCalls,

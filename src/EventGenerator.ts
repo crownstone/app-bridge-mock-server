@@ -30,6 +30,13 @@ export const EventGenerator = {
     };
   },
 
+  getNotificationEvent(data: any) {
+    return {
+      type:   "notification",
+      data:   data,
+    };
+  },
+
   getCallFailEvent(callId: string, error: any) {
     return {
       type:   "failCall",

@@ -1,25 +1,32 @@
 import {EventDispatcher} from "./EventDispatcher";
 import {EventGenerator} from "./EventGenerator";
+import {Util} from "./util/util";
 
 export class BridgeMock {
 
   pendingCalls      : Record<string, {function: string, args: any[], tStart: number, tEnd: number | null}> = {};
   finishedCalls     : Record<string, {function: string, args: any[], tStart: number, tEnd: number | null, resolveType?: string}> = {};
-  bluenetCalls      : {function: string, args: any[], tCalled: number, performType?: string}[] = [];
+  bluenetCalls      : {function: string, args: any[], tStart: number, performType?: "native" | "auto" }[] = [];
 
   functionHandleMap : Record<string, Record<string, string>> = {};
   functionIdMap     : Record<string, string[]> = {};
 
+  pendingResolves : any = {};
 
+
+  // the value is the result of the function call.
   autoResolveMethods : Record<string,any> = {
-    'canUseDynamicBackgroundBroadcasts': false,
-    'requestLocation': {},
-    'isReady': true,
-    'isDevelopmentEnvironment': true,
-    'isPeripheralReady': true,
-    'setKeySets': true,
-    'clearTrackedBeacons': true,
-    'clearFingerprintsPromise': true,
+    canUseDynamicBackgroundBroadcasts: false,
+    requestLocation:                   {},
+    isReady:                           true,
+    isDevelopmentEnvironment:          true,
+    isPeripheralReady:                 true,
+    phoneDisconnect:                   true,
+    setKeySets:                        true,
+    clearTrackedBeacons:               true,
+    clearFingerprintsPromise:          true,
+    broadcastUpdateTrackedDevice:      true,
+    setTimeViaBroadcast:               true,
   };
 
   nativeResolveMethods : Record<string,any> = {
@@ -34,15 +41,21 @@ export class BridgeMock {
 
 
   reset() {
+    for (let pendingId in this.pendingResolves) {
+      clearTimeout(this.pendingResolves[pendingId].timeout);
+      this.pendingResolves[pendingId].resolver();
+      delete this.pendingResolves[pendingId];
+    }
     this.pendingCalls      = {};
-    this.functionHandleMap = {};
-    this.functionIdMap     = {};
     this.finishedCalls     = {};
     this.bluenetCalls      = [];
+    this.functionHandleMap = {};
+    this.functionIdMap     = {};
+    this.pendingResolves   = {};
   }
 
-  addBluenetCall(data: {function: string, args: any[], tCalled: number}) {
-    this.bluenetCalls.push(data);
+  addBluenetCall(data: {function: string, args: any[]}) {
+    this.bluenetCalls.push({...data, tStart: Date.now()});
     EventDispatcher.dispatch(EventGenerator.getCallGeneratedEvent('bluenet'));
 
     if (this.bluenetCallMethods[data.function] !== undefined) {
@@ -78,44 +91,87 @@ export class BridgeMock {
     }
 
     EventDispatcher.dispatch(EventGenerator.getCallGeneratedEvent('promise'));
+
+    this.checkPendingCalls();
   }
 
 
-  failCall(data: {handle: string | null, function: string, error: string}) {
-    if (data.handle) {
-      let callId = this.functionHandleMap[data.function][data.handle];
-      EventDispatcher.dispatch(EventGenerator.getCallFailEvent(callId,data.error));
-      this.finishedCalls[callId] = this.pendingCalls[callId];
-      this.finishedCalls[callId].tEnd = Date.now();
-      this.finishedCalls[callId].resolveType = 'manual';
-
-      this._cleanup(data.function, callId);
-      return;
+  async failCall(data: {handle: string | null, function: string, error: string, timeout?: number}) : Promise<boolean> {
+    let eventSender = (callId:string) => {
+      EventDispatcher.dispatch(EventGenerator.getCallFailEvent(callId, data.error));
     }
 
-    for (let id of this.functionIdMap[data.function]) {
-      EventDispatcher.dispatch(EventGenerator.getCallFailEvent(id,data.error));
-    }
-    this.functionIdMap[data.function] = [];
+    return this.handleCall(data, eventSender);
   }
 
 
-  succeedCall(data: {handle: string | null, function: string, data: any}) {
-    if (data.handle) {
-      let callId = this.functionHandleMap[data.function][data.handle];
-      EventDispatcher.dispatch(EventGenerator.getCallSuccessEvent(callId,data.data));
-      this.finishedCalls[callId] = this.pendingCalls[callId];
-      this.finishedCalls[callId].tEnd = Date.now();
-      this.finishedCalls[callId].resolveType = 'manual';
-
-      this._cleanup(data.function, callId);
-      return;
+  async succeedCall(data: {handle: string | null, function: string, data: any, timeout?: number}) : Promise<boolean> {
+    let eventSender = (callId:string) => {
+      EventDispatcher.dispatch(EventGenerator.getCallSuccessEvent(callId, data.data));
     }
 
-    for (let id of this.functionIdMap[data.function]) {
-      EventDispatcher.dispatch(EventGenerator.getCallSuccessEvent(id,data.data));
+    return this.handleCall(data, eventSender);
+  }
+
+
+  async handleCall(data: {handle: string | null, function: string, data?: any, error?:any, timeout?: number}, eventSender: (callId: string) => void) : Promise<boolean> {
+    let handle = () => {
+      if (data.handle) {
+        let callId = this.functionHandleMap[data.function]?.[data.handle];
+
+        if (!callId) {
+          return false;
+        }
+
+        eventSender(callId)
+        this.finishedCalls[callId] = this.pendingCalls[callId];
+        this.finishedCalls[callId].tEnd = Date.now();
+        this.finishedCalls[callId].resolveType = 'manual';
+
+        this._cleanup(data.function, callId);
+        return true;
+      }
+
+
+      let performed = false;
+      for (let id of this.functionIdMap[data.function]) {
+        eventSender(id);
+        performed = true
+        console.log("Successfully finalized", data.function, "for", data.handle);
+      }
+      this.functionIdMap[data.function] = [];
+      return performed;
     }
-    this.functionIdMap[data.function] = [];
+
+    return new Promise<boolean>((resolve, reject) => {
+      if (handle() === true) { return resolve(true); }
+
+      if (!data.timeout) { return resolve(false) };
+
+      let id = Util.getUUID();
+      let timeout = setTimeout(() => {
+        delete this.pendingResolves[id];
+        console.log("Failed to finalize", data.function, "for", data.handle);
+        resolve(false);
+      }, data.timeout*1000);
+
+      this.pendingResolves[id] = {
+        handler: handle,
+        resolver: () => { resolve(true); },
+        timeout: timeout
+      };
+    })
+  }
+
+
+  async checkPendingCalls() {
+    for (let pendingId in this.pendingResolves) {
+      if (this.pendingResolves[pendingId].handler() === true) {
+        clearTimeout(this.pendingResolves[pendingId].timeout);
+        this.pendingResolves[pendingId].resolver();
+        delete this.pendingResolves[pendingId];
+      }
+    }
   }
 
   succeedById(callId: string, result: any, autoResolve = true) {
@@ -156,7 +212,7 @@ export class BridgeMock {
     let bluenet = [];
     for (let call of this.bluenetCalls) {
       if (call.function === functionName) {
-        bluenet.push({t: call.tCalled, args: call.args})
+        bluenet.push({t: call.tStart, args: call.args})
       }
     }
     return {pending, finished, bluenet};
