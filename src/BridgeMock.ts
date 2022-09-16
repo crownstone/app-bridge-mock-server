@@ -143,13 +143,13 @@ export class BridgeMock {
   getFunctionCalls(functionName: string) {
     let pending = [];
     for (let id in this.pendingCalls) {
-      if (this.pendingCalls[id].function === functionName) {
+      if (this.pendingCalls[id]?.function === functionName) {
         pending.push({t: this.pendingCalls[id].tStart, args: this.pendingCalls[id].args})
       }
     }
     let finished = [];
     for (let id in this.finishedCalls) {
-      if (this.finishedCalls[id].function === functionName) {
+      if (this.finishedCalls[id]?.function === functionName) {
         finished.push({t: this.finishedCalls[id].tStart, args: this.finishedCalls[id].args})
       }
     }

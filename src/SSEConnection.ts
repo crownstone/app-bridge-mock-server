@@ -22,9 +22,6 @@ export class SSEConnection {
 
     // A HTTP connection times out after 2 minutes. To avoid this, we send keep alive messages every 30 seconds
     this.keepAliveTimer = setInterval(() => {
-      // this is not used anymore since we need the ping in node environment which does not show these messages.
-      // this.response.write(':ping\n\n');
-
       let pingEvent = { type:"ping",counter: this.count++ }
       this._transmit("data:" + JSON.stringify(pingEvent) + "\n\n");
 
