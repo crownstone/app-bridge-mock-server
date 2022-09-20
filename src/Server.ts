@@ -2,6 +2,7 @@ import {EventGenerator} from "./EventGenerator";
 import {Request, Response} from "express-serve-static-core"
 import {EventDispatcher} from "./EventDispatcher";
 import {BridgeMock} from "./BridgeMock";
+import {Util} from "./util/util";
 const cors = require('cors');
 
 const express = require('express')
@@ -32,7 +33,7 @@ app.post('/callPromise', (req: Request, res : Response) => {
 app.post('/callBluenet', (req: Request, res : Response) => {
   let content = req.body;
   console.log("Called /callBluenet", content.function);
-  bridgeMock.addBluenetCall(content);
+  bridgeMock.addBluenetCall(Util.getUUID(), content);
   res.end()
 })
 

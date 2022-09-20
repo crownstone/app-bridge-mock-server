@@ -135,7 +135,7 @@ var BluenetCallListing = function (_React$Component) {
       try {
         for (var _iterator = data.bluenet[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
           var item = _step.value;
-          finished.push(Object.assign({ finished: true, type: 'direct' }, item));
+          finished.push(Object.assign({ id: item.id, finished: true, type: 'direct' }, item));
         }
       } catch (err) {
         _didIteratorError = true;
@@ -182,7 +182,7 @@ var BluenetCallListing = function (_React$Component) {
           var item = _step2.value;
 
           result.push(React.createElement(PromiseCallListing, Object.assign({
-            key: '' + item.function + item.tStart
+            key: item.id + '__' + item.function + item.tStart
           }, item, {
             update: function update() {
               _this4.update();
